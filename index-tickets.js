@@ -1,6 +1,6 @@
-const { addGroceryItem, retrieveAllGroceryItems, retrieveGroceryItemById, retrieveGroceryItemsByCategory,
-    deleteGroceryItemById, updateGroceryNameById, updateGroceryQuantityById, 
-    updateGroceryPriceById, updateGroceryCategoryById } = require('./dao');
+const { addTicket, retrieveAllTickets, retrieveTicketById, retrieveTicketsByCategory,
+    deleteTicketById, updateTicketNameById, updateTicketQuantityById, 
+    updateTicketPriceById, updateTicketCategoryById } = require('./dao-tickets');
 const uuid = require('uuid');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -11,12 +11,12 @@ const PORT = 3000;
 app.use(bodyParser.json()); 
 
 app.get('/', (req, res) => {
-    res.send("Hello world!");
+    res.send("Hi everyone!!!!");
 })
 
-app.post('/groceryitems', async (req, res) => {
+app.post('/tickets', async (req, res) => {
     try {
-        await addGroceryItem(uuid.v4(), req.body.name, req.body.quantity, req.body.price, req.body.category);
+        await addTicket(uuid.v4(), req.body.name, req.body.quantity, req.body.price, req.body.category);
         res.send({
             "message": "Successfully added item"
         });
@@ -28,26 +28,26 @@ app.post('/groceryitems', async (req, res) => {
     }
 });
 
-app.get('/groceryitems', async (req, res) => {
+app.get('/tickets', async (req, res) => {
     try {
         if (req.query.category) {
-            let data = await retrieveGroceryItemsByCategory(req.query.category);
+            let data = await retrieveTicketsByCategory(req.query.category);
             if (data.Items.length > 0) {
                 res.send(data.Items);
             } else {
                 res.statusCode = 404;
                 res.send({
-                    "message": `There are no grocery items in the ${req.query.category} category on the list.`
+                    "message": `There are no tickets in the ${req.query.category} category on the list.`
                 })
             }
         } else {
-            let data = await retrieveAllGroceryItems();
+            let data = await retrieveAllTickets();
             if (data.Items.length > 0) {
                 res.send(data.Items);
             } else {
                 res.statusCode = 404;
                 res.send({
-                    "message": "There are currently no grocery items on the list."
+                    "message": "There are currently no tickets on the list."
                 })
             }
         }
@@ -59,9 +59,9 @@ app.get('/groceryitems', async (req, res) => {
     }
 });
 
-app.get('/groceryitems/:id', async (req, res) => {
+app.get('/tickets/:id', async (req, res) => {
     try {
-        let data = await retrieveGroceryItemById(req.params.id);
+        let data = await retrieveTicketById(req.params.id);
 
         if (data.Item) {
             res.send(data.Item);
@@ -79,19 +79,19 @@ app.get('/groceryitems/:id', async (req, res) => {
     }
 });
 
-app.delete('/groceryitems/:id', async (req, res) => {
+app.delete('/tickets/:id', async (req, res) => {
 
     try {
-        let data = await retrieveGroceryItemById(req.params.id);
+        let data = await retrieveTicketById(req.params.id);
         if (data.Item) {
-            await deleteGroceryItemById(req.params.id);
+            await deleteTicketById(req.params.id);
             res.send({
-                "message": `Successfully deleted item with id ${req.params.id}`
+                "message": `Successfully deleted ticket with id ${req.params.id}`
             });
         } else {
             res.statusCode = 404;
             res.send({
-                "message": `Item does not exist to be deleted with id ${req.params.id}`
+                "message": `Ticket does not exist to be deleted with id ${req.params.id}`
             })
         }
     } catch(err) {
@@ -102,18 +102,18 @@ app.delete('/groceryitems/:id', async (req, res) => {
     }
 });
 
-app.patch('/groceryitems/:id/name', async (req, res) => {
+app.patch('/tickets/:id/name', async (req, res) => {
     try {
-        let data = await retrieveGroceryItemById(req.params.id);
+        let data = await retrieveTicketById(req.params.id);
         if (data.Item) {
-            await updateGroceryNameById(req.params.id, req.body.name);
+            await updateTicketNameById(req.params.id, req.body.name);
             res.send({
-                "message": `Successfully updated name of item with id ${req.params.id}`
+                "message": `Successfully updated name of ticket with id ${req.params.id}`
             });
         } else {
             res.statusCode = 404;
             res.send({
-                "message": `Item does not exist with id ${req.params.id}`
+                "message": `Ticket does not exist with id ${req.params.id}`
             });
         }
     } catch (err) {
@@ -124,41 +124,18 @@ app.patch('/groceryitems/:id/name', async (req, res) => {
     }
 });
 
-app.patch('/groceryitems/:id/quantity', async (req, res) => {
+app.patch('/tickets/:id/quantity', async (req, res) => {
     try {
-        let data = await retrieveGroceryItemById(req.params.id);
+        let data = await retrieveTicketById(req.params.id);
         if (data.Item) {
-            await updateGroceryQuantityById(req.params.id, req.body.quantity);
+            await updateTicketQuantityById(req.params.id, req.body.quantity);
             res.send({
-                "message": `Successfully updated quantity of item with id ${req.params.id}`
+                "message": `Successfully updated quantity of ticket with id ${req.params.id}`
             });
         } else {
             res.statusCode = 404;
             res.send({
-                "message": `Item does not exist with id ${req.params.id}`
-            });
-        }
-        
-    } catch (err) {
-        res.statusCode = 500;
-        res.send({
-            "message": err
-        });
-    }
-});
-
-app.patch('/groceryitems/:id/price', async (req, res) => {
-    try {
-        let data = await retrieveGroceryItemById(req.params.id);
-        if (data.Item) {
-            await updateGroceryPriceById(req.params.id, req.body.price);
-            res.send({
-                "message": `Successfully updated price of item with id ${req.params.id}`
-            });
-        } else {
-            res.statusCode = 404;
-            res.send({
-                "message": `Item does not exist with id ${req.params.id}`
+                "message": `Ticket does not exist with id ${req.params.id}`
             });
         }
         
@@ -170,18 +147,41 @@ app.patch('/groceryitems/:id/price', async (req, res) => {
     }
 });
 
-app.patch('/groceryitems/:id/category', async (req, res) => {
+app.patch('/tickets/:id/price', async (req, res) => {
     try {
-        let data = await retrieveGroceryItemById(req.params.id);
+        let data = await retrieveTicketById(req.params.id);
         if (data.Item) {
-            await updateGroceryCategoryById(req.params.id, req.body.category);
+            await updateTicketPriceById(req.params.id, req.body.price);
             res.send({
-                "message": `Successfully updated category of item with id ${req.params.id}`
+                "message": `Successfully updated price of ticket with id ${req.params.id}`
             });
         } else {
             res.statusCode = 404;
             res.send({
-                "message": `Item does not exist with id ${req.params.id}`
+                "message": `Ticket does not exist with id ${req.params.id}`
+            });
+        }
+        
+    } catch (err) {
+        res.statusCode = 500;
+        res.send({
+            "message": err
+        });
+    }
+});
+
+app.patch('/tickets/:id/category', async (req, res) => {
+    try {
+        let data = await retrieveTicketById(req.params.id);
+        if (data.Item) {
+            await updateTicketCategoryById(req.params.id, req.body.category);
+            res.send({
+                "message": `Successfully updated category of ticket with id ${req.params.id}`
+            });
+        } else {
+            res.statusCode = 404;
+            res.send({
+                "message": `Ticket does not exist with id ${req.params.id}`
             });
         }
         

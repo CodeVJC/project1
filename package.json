@@ -18,7 +18,9 @@
   "homepage": "https://github.com/CodeVJC/project1#readme",
   "dependencies": {
     "aws-sdk": "^2.1299.0",
+    "bluebird": "^3.7.2",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "uuid": "^9.0.0"
   }
 }

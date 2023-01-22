@@ -6,11 +6,11 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
-function addGroceryItem(grocery_item_id, name, quantity, price, category) {
+function addTickets(ticket_id, name, quantity, price, category) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Item: {
-            grocery_item_id,
+            ticket_id,
             name,
             quantity,
             price,
@@ -21,27 +21,27 @@ function addGroceryItem(grocery_item_id, name, quantity, price, category) {
     return docClient.put(params).promise();
 }
 
-function retrieveAllGroceryItems() {
+function retrieveAllTickets() {
     const params = {
-        TableName: 'grocery_items'
+        TableName: 'tickets'
     }
 
     return docClient.scan(params).promise();
 }
 
-function retrieveGroceryItemById(id) {
+function retrieveTicketById(id) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            "grocery_item_id": id
+            "ticket_id": id
         }
     }
     return docClient.get(params).promise();
 }
 
-function retrieveGroceryItemsByCategory(category) {
+function retrieveTicketsByCategory(category) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         IndexName: 'category-index',
         KeyConditionExpression: '#c = :value',
         ExpressionAttributeNames: {
@@ -55,22 +55,22 @@ function retrieveGroceryItemsByCategory(category) {
     return docClient.query(params).promise();
 }
 
-function deleteGroceryItemById(grocery_item_id) {
+function deleteTicketsById(ticket_id) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            grocery_item_id
+            ticket_id
         }
     }
 
     return docClient.delete(params).promise();
 }
 
-function updateGroceryNameById(grocery_item_id, newName) {
+function updateTicketNameById(ticket_id, newName) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            grocery_item_id
+            ticket_id
         },
         UpdateExpression: 'set #n = :value',
         ExpressionAttributeNames: {
@@ -83,11 +83,11 @@ function updateGroceryNameById(grocery_item_id, newName) {
     return docClient.update(params).promise();
 }
 
-function updateGroceryQuantityById(grocery_item_id, newQuantity) {
+function updateTicketQuantityById(ticket_id, newQuantity) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            grocery_item_id
+            ticket_id
         },
         UpdateExpression: 'set #n = :value',
         ExpressionAttributeNames: {
@@ -100,11 +100,11 @@ function updateGroceryQuantityById(grocery_item_id, newQuantity) {
     return docClient.update(params).promise();
 }
 
-function updateGroceryPriceById(grocery_item_id, newPrice) {
+function updateTicketPriceById(ticket_id, newPrice) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            grocery_item_id
+            ticket_id
         },
         UpdateExpression: 'set #n = :value',
         ExpressionAttributeNames: {
@@ -117,11 +117,11 @@ function updateGroceryPriceById(grocery_item_id, newPrice) {
     return docClient.update(params).promise();
 }
 
-function updateGroceryCategoryById(grocery_item_id, newCategory) {
+function updateTicketCategoryById(ticket_id, newCategory) {
     const params = {
-        TableName: 'grocery_items',
+        TableName: 'tickets',
         Key: {
-            grocery_item_id
+            ticket_id
         },
         UpdateExpression: 'set #n = :value',
         ExpressionAttributeNames: {
@@ -135,13 +135,13 @@ function updateGroceryCategoryById(grocery_item_id, newCategory) {
 }
 
 module.exports = {
-    addGroceryItem,
-    retrieveAllGroceryItems,
-    retrieveGroceryItemById,
-    retrieveGroceryItemsByCategory,
-    deleteGroceryItemById,
-    updateGroceryNameById,
-    updateGroceryQuantityById,
-    updateGroceryPriceById,
-    updateGroceryCategoryById
+    addTickets,
+    retrieveAllTickets,
+    retrieveTicketById,
+    retrieveTicketsByCategory,
+    deleteTicketById,
+    updateTicketNameById,
+    updateTicketQuantityById,
+    updateTicketPriceById,
+    updateTicketCategoryById
 }
