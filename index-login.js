@@ -60,7 +60,7 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-app.get('/endpointforregularusersonly', async (req, res) => {
+app.get('/user', async (req, res) => {
     const token = req.headers.authorization.split(' ')[1]; // ['Bearer', '<token>']
     
     try {
@@ -85,7 +85,7 @@ app.get('/endpointforregularusersonly', async (req, res) => {
     }
 });
 
-app.get('/endpointforadminsonly', async (req, res) => {
+app.get('/admin', async (req, res) => {
     const token = req.headers.authorization.split(' ')[1]; // ['Bearer' '<token>']
     
     try {

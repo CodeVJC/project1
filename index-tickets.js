@@ -1,22 +1,20 @@
-const { addTicket, retrieveAllTickets, retrieveTicketById, retrieveTicketsByCategory,
-    deleteTicketById, updateTicketNameById, updateTicketQuantityById, 
-    updateTicketPriceById, updateTicketCategoryById } = require('./dao-tickets');
+const { addTicket, retrieveAllTickets, retrieveTicketsById, retrieveTicketByIdandTimestamp, retrieveTicketsByStatus,
+    deleteTicketById, updateTicketAmountById, updateTicketStatusById } = require('./dao-tickets');
 const uuid = require('uuid');
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
 const PORT = 3000;
 
 app.use(bodyParser.json()); 
 
 app.get('/', (req, res) => {
-    res.send("Hi everyone!!!!");
+    res.send("Welcome to the home page.");
 })
 
 app.post('/tickets', async (req, res) => {
     try {
-        await addTicket(uuid.v4(), req.body.name, req.body.quantity, req.body.price, req.body.category);
+        await addTicket(req.body.user_id, req.body.timestamp, req.body.amount, req.body.status);
         res.send({
             "message": "Successfully added item"
         });
@@ -30,14 +28,14 @@ app.post('/tickets', async (req, res) => {
 
 app.get('/tickets', async (req, res) => {
     try {
-        if (req.query.category) {
-            let data = await retrieveTicketsByCategory(req.query.category);
+        if (req.query.status) {
+            let data = await retrieveTicketsByStatus(req.query.status);
             if (data.Items.length > 0) {
                 res.send(data.Items);
             } else {
                 res.statusCode = 404;
                 res.send({
-                    "message": `There are no tickets in the ${req.query.category} category on the list.`
+                    "message": `There are no tickets in the ${req.query.status} status on the list.`
                 })
             }
         } else {
@@ -59,16 +57,34 @@ app.get('/tickets', async (req, res) => {
     }
 });
 
-app.get('/tickets/:id', async (req, res) => {
+app.get('/user/tickets/:id', async (req, res) => {
     try {
-        let data = await retrieveTicketById(req.params.id);
+        let data = await retrieveTicketsById(req.params.id);
+        if (data.Items) {
+            res.send(data.Items);
+        } else {
+            res.statusCode = 404;
+            res.send({
+                "message": `Tickets with id ${req.params.id} do not exist`
+            })
+        }
+    } catch (err) {
+        res.statusCode = 500;
+        res.send({
+            "message": err
+        });
+    }
+});
 
+app.get('/tickets/:id/:timestamp', async (req, res) => {
+    try {
+        let data = await retrieveTicketByIdandTimestamp(req.params.id, req.params.timestamp);
         if (data.Item) {
             res.send(data.Item);
         } else {
             res.statusCode = 404;
             res.send({
-                "message": `Item with id ${req.params.id} does not exist`
+                "message": `Tickets with id ${req.params.id} and timestamp ${req.params.timestamp} do not exist`
             })
         }
     } catch (err) {
@@ -80,9 +96,8 @@ app.get('/tickets/:id', async (req, res) => {
 });
 
 app.delete('/tickets/:id', async (req, res) => {
-
     try {
-        let data = await retrieveTicketById(req.params.id);
+        let data = await retrieveTicketByIdandTimestamp(req.params.id);
         if (data.Item) {
             await deleteTicketById(req.params.id);
             res.send({
@@ -102,56 +117,11 @@ app.delete('/tickets/:id', async (req, res) => {
     }
 });
 
-app.patch('/tickets/:id/name', async (req, res) => {
+app.patch('/tickets/:id/amount', async (req, res) => {
     try {
-        let data = await retrieveTicketById(req.params.id);
+        let data = await retrieveTicketByIdandTimestamp(req.params.id);
         if (data.Item) {
-            await updateTicketNameById(req.params.id, req.body.name);
-            res.send({
-                "message": `Successfully updated name of ticket with id ${req.params.id}`
-            });
-        } else {
-            res.statusCode = 404;
-            res.send({
-                "message": `Ticket does not exist with id ${req.params.id}`
-            });
-        }
-    } catch (err) {
-        res.statusCode = 500;
-        res.send({
-            "message": err
-        });
-    }
-});
-
-app.patch('/tickets/:id/quantity', async (req, res) => {
-    try {
-        let data = await retrieveTicketById(req.params.id);
-        if (data.Item) {
-            await updateTicketQuantityById(req.params.id, req.body.quantity);
-            res.send({
-                "message": `Successfully updated quantity of ticket with id ${req.params.id}`
-            });
-        } else {
-            res.statusCode = 404;
-            res.send({
-                "message": `Ticket does not exist with id ${req.params.id}`
-            });
-        }
-        
-    } catch (err) {
-        res.statusCode = 500;
-        res.send({
-            "message": err
-        });
-    }
-});
-
-app.patch('/tickets/:id/price', async (req, res) => {
-    try {
-        let data = await retrieveTicketById(req.params.id);
-        if (data.Item) {
-            await updateTicketPriceById(req.params.id, req.body.price);
+            await updateTicketAmountById(req.params.id, req.body.amount);
             res.send({
                 "message": `Successfully updated price of ticket with id ${req.params.id}`
             });
@@ -160,8 +130,7 @@ app.patch('/tickets/:id/price', async (req, res) => {
             res.send({
                 "message": `Ticket does not exist with id ${req.params.id}`
             });
-        }
-        
+        }      
     } catch (err) {
         res.statusCode = 500;
         res.send({
@@ -170,21 +139,20 @@ app.patch('/tickets/:id/price', async (req, res) => {
     }
 });
 
-app.patch('/tickets/:id/category', async (req, res) => {
+app.patch('/tickets/:id/status', async (req, res) => {
     try {
-        let data = await retrieveTicketById(req.params.id);
+        let data = await retrieveTicketByIdandTimestamp(req.params.id);
         if (data.Item) {
-            await updateTicketCategoryById(req.params.id, req.body.category);
+            await updateTicketStatusById(req.params.id, req.body.status);
             res.send({
-                "message": `Successfully updated category of ticket with id ${req.params.id}`
+                "message": `Successfully updated status of ticket with id ${req.params.id}`
             });
         } else {
             res.statusCode = 404;
             res.send({
                 "message": `Ticket does not exist with id ${req.params.id}`
             });
-        }
-        
+        }       
     } catch (err) {
         res.statusCode = 500;
         res.send({
