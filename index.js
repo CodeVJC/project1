@@ -1,5 +1,5 @@
-const { addTicket, retrieveAllTickets, retrieveTicketsById, retrieveTicketByIdandTimestamp, retrieveTicketsByStatus,
-    deleteTicketById, updateTicketAmountById, updateTicketStatusById } = require('./dao-tickets');
+const { addTicket, retrieveAllTickets, retrieveTicketsById, retrieveTicketsByIdandStatus, retrieveTicketByStatus,
+    retrieveTicketByTimestamp, updateTicketStatusByTimestamp } = require('./dao-tickets');
 const { retrieveUserByUsername, addUser } = require('./dao-login');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -94,7 +94,7 @@ app.post('/employee', async (req, res) => {
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
             try {
-                await addTicket(payload.username, String(timestamp.now()), req.body.amount, req.body.description);
+                await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
                 res.send({
                     "message": "Successfully added item"
                 });
@@ -124,16 +124,30 @@ app.get('/employee/:id', async (req, res) => {
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
             try {
-                let data = await retrieveTicketsById(req.params.id);
-                if (req.params.id != payload.username) {
-                    res.send('You can only review your own tickets.');
-                } else if (data.Items) {
-                    res.send(data.Items);
+                if (req.body.status) {
+                    let data = await retrieveTicketsByIdandStatus(req.params.id, req.body.status);
+                    if (req.params.id != payload.username) {
+                        res.send('You can only review your own tickets.');
+                    } else if (data.Items.length > 0) {
+                        res.send(data.Items);
+                    } else {
+                        res.statusCode = 404;
+                        res.send({
+                            "message": `There are no tickets in the ${req.body.status} status on the list.`
+                        })
+                    }
                 } else {
-                    res.statusCode = 404;
-                    res.send({
-                        "message": `Tickets with id ${req.params.id} do not exist`
-                    })
+                    let data = await retrieveTicketsById(req.params.id);
+                    if (req.params.id != payload.username) {
+                        res.send('You can only review your own tickets.');
+                    } else if (data.Items) {
+                        res.send(data.Items);
+                    } else {
+                        res.statusCode = 404;
+                        res.send({
+                            "message": `Tickets with id ${req.params.id} do not exist`
+                        })
+                    }
                 }
             } catch (err) {
                 res.statusCode = 500;
@@ -141,6 +155,11 @@ app.get('/employee/:id', async (req, res) => {
                     "message": err
                 });
             }
+        } else {
+            res.statusCode = 401;
+            res.send({
+                "message": `You aren't a regular employee. You are a ${payload.role}`
+            })
         }
     } catch(err) { // token verification failure
         res.statusCode = 401;
@@ -172,34 +191,73 @@ app.get('/manager', async (req, res) => {
     } 
 });
 
-app.get('/tickets', async (req, res) => {
+app.get('/manager/tickets', async (req, res) => {
+    const token = req.headers.authorization.split(' ')[1]; // ['Bearer', '<token>']
     try {
-        if (req.query.status) {
-            let data = await retrieveTicketsByStatus(req.query.status);
-            if (data.Items.length > 0) {
-                res.send(data.Items);
-            } else {
-                res.statusCode = 404;
+        const payload = await verifyTokenAndReturnPayload(token);
+        if (payload.role === 'manager') {
+            try {
+                let data = await retrieveTicketByStatus(req.query.status);
+                if (data.Items.length > 0) {
+                    res.send(data.Items);
+                } else {
+                    res.send('There are no pending tickets.')
+                }
+            } catch (err) {
+                res.statusCode = 500;
                 res.send({
-                    "message": `There are no tickets in the ${req.query.status} status on the list.`
-                })
+                    "message": err
+                });
             }
         } else {
-            let data = await retrieveAllTickets();
-            if (data.Items.length > 0) {
-                res.send(data.Items);
-            } else {
-                res.statusCode = 404;
-                res.send({
-                    "message": "There are currently no tickets on the list."
-                })
-            }
+            res.statusCode = 401;
+            res.send({
+                "message": `You aren't a manager. You are a ${payload.role}`
+            })
         }
-    } catch(err) {
-        res.statusCode = 500;
+    } catch(err) { // token verification failure
+        res.statusCode = 401;
         res.send({
-            "message": err
-        });
+            "message": "Token verification failure"
+        })
+    }
+});
+
+app.patch('/manager/tickets', async (req, res) => {
+    const token = req.headers.authorization.split(' ')[1]; // ['Bearer', '<token>']
+    try {
+        const payload = await verifyTokenAndReturnPayload(token);
+        if (payload.role === 'manager') {
+            try {
+                let data = await retrieveTicketByTimestamp(req.body.user_id, req.body.timestamp);
+                if (data.Items) {
+                    await updateTicketStatusByTimestamp(req.body.user_id, req.body.timestamp, req.body.status);
+                    res.send({
+                        "message": `Successfully updated status of ticket with timestamp ${req.body.timestamp}`
+                    });
+                } else {
+                    res.statusCode = 404;
+                    res.send({
+                        "message": `Ticket does not exist with timestamp ${req.body.timestamp}`
+                    });
+                }       
+            } catch (err) {
+                res.statusCode = 500;
+                res.send({
+                    "message": err
+                });
+            }
+        } else {
+            res.statusCode = 401;
+            res.send({
+                "message": `You aren't a manager. You are a ${payload.role}`
+            })
+        }
+    } catch(err) { // token verification failure
+        res.statusCode = 401;
+        res.send({
+            "message": "Token verification failure"
+        })
     }
 });
 

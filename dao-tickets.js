@@ -41,71 +41,77 @@ function retrieveTicketsById(id) {
     return docClient.query(params).promise();
 }
 
-function retrieveTicketByIdandTimestamp(id, timestamp) {
+function retrieveTicketsByIdandStatus(id, status) {
     const params = {
         TableName: 'tickets',
-        Key: {
-            "user_id": id,
-            "timestamp": timestamp
-        }
-    }
-    return docClient.get(params).promise();
-}
-
-function retrieveTicketsByStatus(status) {
-    const params = {
-        TableName: 'tickets',
-        IndexName: 'status-index',
-        KeyConditionExpression: '#s = :value',
+        KeyConditionExpression: '#i = :value',
+        FilterExpression: '#s = :value2',
         ExpressionAttributeNames: {
-            '#s': 'status'
+            '#i': 'user_id',
+            "#s": "status",
         },
         ExpressionAttributeValues: {
-            ':value': status
+            ':value': id,
+            ":value2": status,
         }
     };
     return docClient.query(params).promise();
 }
 
-function deleteTicketById(user_id) {
+function retrieveTicketByStatus() {
     const params = {
         TableName: 'tickets',
-        Key: {
-            user_id
-        }
-    }
-    return docClient.delete(params).promise();
-}
-
-function updateTicketAmountById(user_id, newAmount) {
-    const params = {
-        TableName: 'tickets',
-        Key: {
-            user_id
-        },
-        UpdateExpression: 'set #a = :value',
+        IndexName: 'status-index',
+        KeyConditionExpression: '#c = :value',
         ExpressionAttributeNames: {
-            '#a': 'amount'
+            '#c': 'status'
         },
         ExpressionAttributeValues: {
-            ':value': newAmount
+            ':value': 'pending'
         }
-    }
-    return docClient.update(params).promise();
+    };
+    return docClient.query(params).promise();
 }
 
-function updateTicketStatusById(user_id, newStatus) {
+function retrieveTicketByTimestamp(user_id, timestamp) {
+    const params = {
+        TableName: 'tickets',
+        KeyConditionExpression: '#i = :value and #t = :value2',
+        ExpressionAttributeNames: {
+            '#i': 'user_id',
+            "#t": "timestamp",
+        },
+        ExpressionAttributeValues: {
+            ':value': user_id,
+            ":value2": timestamp,
+        }
+    };
+    return docClient.query(params).promise();
+
+/*function retrieveTicketByTimestamp(user_id, timestamp) {
     const params = {
         TableName: 'tickets',
         Key: {
-            ticket_id
+            user_id,
+            timestamp
+        }
+    }
+    return docClient.get(params).promise();*/
+}
+
+function updateTicketStatusByTimestamp(user_id, timestamp, status) {
+    const params = {
+        TableName: 'tickets',
+        Key: {
+            user_id, 
+            timestamp
         },
-        UpdateExpression: 'set #s = :value',
+        UpdateExpression: 'set #s = :value3',
         ExpressionAttributeNames: {
             '#s': 'status'
         },
         ExpressionAttributeValues: {
-            ':value': newStatus
+            ':value3': status
         }
     }
     return docClient.update(params).promise();
@@ -115,9 +121,8 @@ module.exports = {
     addTicket,
     retrieveAllTickets,
     retrieveTicketsById,
-    retrieveTicketByIdandTimestamp,
-    retrieveTicketsByStatus,
-    deleteTicketById,
-    updateTicketAmountById,
-    updateTicketStatusById
+    retrieveTicketsByIdandStatus,
+    retrieveTicketByStatus,
+    retrieveTicketByTimestamp,
+    updateTicketStatusByTimestamp
 }
