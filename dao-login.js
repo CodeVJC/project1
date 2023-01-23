@@ -17,7 +17,7 @@ function retrieveUserByUsername(username) {
     return docClient.get(params).promise();
 }
 
-function addUser(username, password, role = "employee") {
+function addUser(username, password, role = 'employee') {
     const params = {
         TableName: 'users',
         Item: {
