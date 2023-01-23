@@ -87,16 +87,6 @@ function retrieveTicketByTimestamp(user_id, timestamp) {
         }
     };
     return docClient.query(params).promise();
-
-/*function retrieveTicketByTimestamp(user_id, timestamp) {
-    const params = {
-        TableName: 'tickets',
-        Key: {
-            user_id,
-            timestamp
-        }
-    }
-    return docClient.get(params).promise();*/
 }
 
 function updateTicketStatusByTimestamp(user_id, timestamp, status) {
