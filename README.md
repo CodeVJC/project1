@@ -8,7 +8,7 @@
 ### GET /
 #### Request - access home page
 #### Success - reached home page 
-Status: 200 OK
+Status: 200 OK\
 Body:
 ```
 Welcome to the home page.
@@ -24,7 +24,7 @@ Body:
 }
 ```
 #### Success - username doesn't exist, password provided => user made
-Status: 201 Created
+Status: 201 Created\
 Body:
 ```
 {
@@ -32,7 +32,7 @@ Body:
 }
 ```
 #### Error - username already exists
-Status: 400 Bad Request
+Status: 400 Bad Request\
 Body:
 ```
 {
@@ -50,7 +50,7 @@ Body:
 }
 ```
 #### Success - username exists, password matches => token made
-Status: 200 OK
+Status: 200 OK\
 Body:
 ```
 {
@@ -59,7 +59,7 @@ Body:
 }
 ```
 #### Error - username doesn't exist
-Status: 400 Bad Request
+Status: 400 Bad Request\
 Body:
 ```
 {
@@ -67,7 +67,7 @@ Body:
 }
 ```
 #### Error - password doesn't match
-Status: 400 Bad Request
+Status: 400 Bad Request\
 Body:
 ```
 {
@@ -85,11 +85,11 @@ Body:
     "description": "description"
 }
 ```
-Header: 
+Header:\ 
 Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6ImVtcGxveWVlIiwiaWF0IjoxNjc0NTYxOTcyLCJleHAiOjE2NzUxNjY3NzJ9.HCmJ3hx6uFtXnC-mtCpWQDFZOQxxhoAEmIVP68DrwPw"
 
 #### Success - token verified + role=employee
-Status: 201 Created
+Status: 201 Created\
 Body:
 ```
 {
@@ -97,14 +97,14 @@ Body:
 }
 ```
 #### Error - token valid, but for a manager, not employee
-Status: 401 Unauthorized
+Status: 401 Unauthorized\
 ```
 {
     "message": "You aren't a regular employee. You are a manager."
 }
 ```
 #### Error - invalid JWT (JsonWebTokenError)
-Status: 400 Bad Request
+Status: 400 Bad Request\
 Body:
 ```
 {
@@ -112,7 +112,7 @@ Body:
 }
 ```
 #### Error - no JWT (TypeError)
-Status: 400 Bad Request
+Status: 400 Bad Request\
 Body:
 ```
 {
@@ -120,7 +120,7 @@ Body:
 }
 ```
 #### Error - other
-Status: 500 internal server error
+Status: 500 internal server error\
 
 ## dao-login.js handles "users" table interaction in database
 * retrieveUserByUsername
