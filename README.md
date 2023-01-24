@@ -85,7 +85,7 @@ Body:
     "description": "description"
 }
 ```
-Header:\ 
+Header:  
 Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6ImVtcGxveWVlIiwiaWF0IjoxNjc0NTYxOTcyLCJleHAiOjE2NzUxNjY3NzJ9.HCmJ3hx6uFtXnC-mtCpWQDFZOQxxhoAEmIVP68DrwPw"
 
 #### Success - token verified + role=employee
@@ -97,7 +97,7 @@ Body:
 }
 ```
 #### Error - token valid, but for a manager, not employee
-Status: 401 Unauthorized\
+Status: 401 Unauthorized
 ```
 {
     "message": "You aren't a regular employee. You are a manager."
@@ -120,7 +120,7 @@ Body:
 }
 ```
 #### Error - other
-Status: 500 internal server error\
+Status: 500 internal server error
 
 ## dao-login.js handles "users" table interaction in database
 * retrieveUserByUsername
