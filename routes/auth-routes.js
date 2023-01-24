@@ -1,7 +1,30 @@
 const express = require('express');
-const { createJWT } = require('./utility/jwt-util');
+const { createJWT } = require('../utility/jwt-util');
 const router = express.Router();
-const { retrieveUserByUsername, addUser } = require('./dao/dao-login');
+const { retrieveUserByUsername, addUser } = require('../dao/dao-login');
+
+router.get('/', (req, res) => {
+    res.send("Welcome to the home page.");
+})
+
+router.post('/signup', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+    const data = await retrieveUserByUsername(username);
+    if (data.Item) { 
+        res.statusCode = 400;
+        res.send({
+            "message": "That username already exists. Please choose another.",
+        });
+    } else {
+        await addUser(username, password);
+        res.statusCode = 201; 
+        res.send({
+            "message": "Successfully registered. Please go to login page."
+        });
+    } 
+
+});
 
 router.post('/login', async (req, res) => {
     const username = req.body.username;
@@ -26,24 +49,6 @@ router.post('/login', async (req, res) => {
             "message": `User with username ${username} does not exist`
         })
     } 
-});
-
-router.post('/signup', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-    const data = await retrieveUserByUsername(username);
-    if (data.Item) { 
-        res.statusCode = 400;
-        res.send({
-            "message": "That username already exists. Please choose another.",
-        });
-    } else {
-        await addUser(username, password);
-        res.send({
-            "message": "Successfully registered. Please go to login page."
-        });
-    } 
-
 });
 
 module.exports = router;

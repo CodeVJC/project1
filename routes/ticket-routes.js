@@ -1,15 +1,44 @@
 const express = require('express');
-const { verifyTokenAndReturnPayload } = require('./utility/jwt-util');
+const { verifyTokenAndReturnPayload } = require('../utility/jwt-util');
 const router = express.Router();
-const { addTicket, retrieveAllTickets, retrieveTicketsById, retrieveTicketsByIdandStatus, retrieveTicketByStatus,
-    retrieveTicketByTimestamp, updateTicketStatusByTimestamp } = require('./dao/dao-tickets');
+const { addTicket, retrieveAllTickets, retrieveTicketsByUsername, retrieveTicketsByUsernameandStatus, retrieveTicketByStatus,
+    retrieveTicketByTimestamp, updateTicketStatusByTimestamp } = require('../dao/dao-tickets');
 
 const timestamp = require('unix-timestamp');
 timestamp.round = true;
 
-router.get('/', (req, res) => {
-    res.send("Welcome to the home page.");
-})
+router.post('/tickets', async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1]; 
+        const payload = await verifyTokenAndReturnPayload(token);
+        if (payload.role === 'employee') {
+            await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
+            res.statusCode = 201; 
+            res.send({
+                "message": "Successfully added ticket."
+            });
+        } else {
+            res.statusCode = 401;
+            res.send({
+                "message": `You aren't a regular employee. You are a ${payload.role}.`
+            })
+        }
+    } catch(err) {
+        if (err.name === 'JsonWebTokenError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "Invalid JWT"
+            })
+        } else if (err.name === 'TypeError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "No Authorization header provided"
+            });
+        } else {
+            res.statusCode = 500; // 500 internal server error
+        }
+    }
+});
 
 router.get('/employee', async (req, res) => {
     const token = req.headers.authorization.split(' ')[1]; 
@@ -33,48 +62,15 @@ router.get('/employee', async (req, res) => {
     }
 });
 
-router.post('/tickets', async (req, res) => {
-    try {
-        const token = req.headers.authorization.split(' ')[1]; 
-        const payload = await verifyTokenAndReturnPayload(token);
-        if (payload.role === 'employee') {
-            await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
-            res.statusCode = 201; 
-            res.send({
-                "message": "Successfully added item"
-            });
-        } else {
-            res.statusCode = 401;
-            res.send({
-                "message": `You aren't a regular employee. You are a ${payload.role}`
-            })
-        }
-    } catch(err) {
-        if (err.name === 'JsonWebTokenError') {
-            res.statusCode = 400;
-            res.send({
-                "message": "Invalid JWT"
-            })
-        } else if (err.name === 'TypeError') {
-            res.statusCode = 400;
-            res.send({
-                "message": "No Authorization header provided"
-            });
-        } else {
-            res.statusCode = 500; // 500 internal server error
-        }
-    }
-});
-
-router.get('/employee/:id', async (req, res) => {
+router.get('/employee/:username', async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
     try {
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
             try {
                 if (req.body.status) {
-                    let data = await retrieveTicketsByIdandStatus(req.params.id, req.body.status);
-                    if (req.params.id != payload.username) {
+                    let data = await retrieveTicketsByUsernameandStatus(req.params.username, req.body.status);
+                    if (req.params.username != payload.username) {
                         res.send('You can only review your own tickets.');
                     } else if (data.Items.length > 0) {
                         res.send(data.Items);
@@ -85,15 +81,15 @@ router.get('/employee/:id', async (req, res) => {
                         })
                     }
                 } else {
-                    let data = await retrieveTicketsById(req.params.id);
-                    if (req.params.id != payload.username) {
+                    let data = await retrieveTicketsByUsername(req.params.username);
+                    if (req.params.username != payload.username) {
                         res.send('You can only review your own tickets.');
                     } else if (data.Items) {
                         res.send(data.Items);
                     } else {
                         res.statusCode = 404;
                         res.send({
-                            "message": `Tickets with id ${req.params.id} do not exist`
+                            "message": `Tickets for username ${req.params.username} do not exist`
                         })
                     }
                 }
@@ -177,9 +173,9 @@ router.patch('/manager/tickets', async (req, res) => {
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'manager') {
             try {
-                let data = await retrieveTicketByTimestamp(req.body.user_id, req.body.timestamp);
+                let data = await retrieveTicketByTimestamp(req.body.username, req.body.timestamp);
                 if (data.Items) {
-                    await updateTicketStatusByTimestamp(req.body.user_id, req.body.timestamp, req.body.status);
+                    await updateTicketStatusByTimestamp(req.body.username, req.body.timestamp, req.body.status);
                     res.send({
                         "message": `Successfully updated status of ticket with timestamp ${req.body.timestamp}`
                     });
