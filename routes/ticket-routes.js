@@ -33,33 +33,36 @@ router.get('/employee', async (req, res) => {
     }
 });
 
-router.post('/employee', async (req, res) => {
-    const token = req.headers.authorization.split(' ')[1]; 
+router.post('/tickets', async (req, res) => {
     try {
+        const token = req.headers.authorization.split(' ')[1]; 
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
-            try {
-                await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
-                res.send({
-                    "message": "Successfully added item"
-                });
-            } catch(err) {
-                res.statusCode = 500; 
-                res.send({
-                    "message": err
-                });
-            }
+            await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
+            res.statusCode = 201; 
+            res.send({
+                "message": "Successfully added item"
+            });
         } else {
             res.statusCode = 401;
             res.send({
                 "message": `You aren't a regular employee. You are a ${payload.role}`
             })
         }
-    } catch(err) { 
-        res.statusCode = 401;
-        res.send({
-            "message": "Token verification failure"
-        })
+    } catch(err) {
+        if (err.name === 'JsonWebTokenError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "Invalid JWT"
+            })
+        } else if (err.name === 'TypeError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "No Authorization header provided"
+            });
+        } else {
+            res.statusCode = 500; // 500 internal server error
+        }
     }
 });
 

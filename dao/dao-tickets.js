@@ -6,18 +6,17 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
-function addTicket(user_id, timestamp, amount, description, status = 'pending') {
-    const params = {
+function addTicket(username, timestamp, amount, description) {
+    return docClient.put({
         TableName: 'tickets',
         Item: {
-            user_id,
-            timestamp,
-            amount,
-            description,
-            status
+            "username": username,
+            "timestamp": timestamp,
+            "amount": amount,
+            "description": description,
+            "status": "pending"
         }
-    }
-    return docClient.put(params).promise();
+    }).promise();
 }
 
 function retrieveAllTickets() {

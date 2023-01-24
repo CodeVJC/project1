@@ -7,26 +7,23 @@ AWS.config.update({
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 function retrieveUserByUsername(username) {
-    const params = {
+    return docClient.get({
         TableName: 'users',
         Key: {
-            username
+            "username": username
         }
-    };
-
-    return docClient.get(params).promise();
+    }).promise();
 }
 
-function addUser(username, password, role = 'employee') {
-    const params = {
+function addUser(username, password) {
+    return docClient.put({
         TableName: 'users',
         Item: {
-            username,
-            password,
-            role
+            "username": username,
+            "password": password,
+            "role": "employee"
         }
-    }
-    return docClient.put(params).promise();
+    }).promise();
 }
 
 module.exports = {
