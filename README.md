@@ -122,6 +122,12 @@ Body:
 #### Error - other
 Status: 500 internal server error
 
+### POST /tickets
+### POST /tickets
+### POST /tickets
+### POST /tickets
+### POST /tickets
+
 ## dao-login.js handles "users" table interaction in database
 * retrieveUserByUsername
     * GET partition key "username"

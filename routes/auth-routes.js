@@ -7,6 +7,7 @@ router.get('/', (req, res) => {
     res.send("Welcome to the home page.");
 })
 
+//project requirement 1
 router.post('/signup', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;

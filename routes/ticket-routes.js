@@ -7,6 +7,7 @@ const { addTicket, retrieveAllTickets, retrieveTicketsByUsername, retrieveTicket
 const timestamp = require('unix-timestamp');
 timestamp.round = true;
 
+//project requirement 2
 router.post('/tickets', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1]; 
@@ -40,64 +41,32 @@ router.post('/tickets', async (req, res) => {
     }
 });
 
-router.get('/employee', async (req, res) => {
-    const token = req.headers.authorization.split(' ')[1]; 
+//project requirement 4
+router.get('/tickets', async (req, res) => {
     try {
+        const token = req.headers.authorization.split(' ')[1];
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
-            res.send({
-                "message": `Welcome, employee ${payload.username}!`
-            })
-        } else {
-            res.statusCode = 401;
-            res.send({
-                "message": `You aren't a regular employee. You are a ${payload.role}`
-            })
-        }
-    } catch(err) { 
-        res.statusCode = 401;
-        res.send({
-            "message": "Token verification failure"
-        })
-    }
-});
-
-router.get('/employee/:username', async (req, res) => {
-    const token = req.headers.authorization.split(' ')[1];
-    try {
-        const payload = await verifyTokenAndReturnPayload(token);
-        if (payload.role === 'employee') {
-            try {
-                if (req.body.status) {
-                    let data = await retrieveTicketsByUsernameandStatus(req.params.username, req.body.status);
-                    if (req.params.username != payload.username) {
-                        res.send('You can only review your own tickets.');
-                    } else if (data.Items.length > 0) {
-                        res.send(data.Items);
-                    } else {
-                        res.statusCode = 404;
-                        res.send({
-                            "message": `There are no tickets in the ${req.body.status} status on the list.`
-                        })
-                    }
+            if (req.query.status) {
+                let data = await retrieveTicketsByUsernameandStatus(payload.username, req.query.status);
+                if (data.Items.length > 0) {
+                    res.send(data.Items);
                 } else {
-                    let data = await retrieveTicketsByUsername(req.params.username);
-                    if (req.params.username != payload.username) {
-                        res.send('You can only review your own tickets.');
-                    } else if (data.Items) {
-                        res.send(data.Items);
-                    } else {
-                        res.statusCode = 404;
-                        res.send({
-                            "message": `Tickets for username ${req.params.username} do not exist`
-                        })
-                    }
+                    res.statusCode = 404;
+                    res.send({
+                        "message": `There are no tickets in the ${req.query.status} status on the list.`
+                    })
                 }
-            } catch (err) {
-                res.statusCode = 500;
-                res.send({
-                    "message": err
-                });
+            } else {
+                let data = await retrieveTicketsByUsername(payload.username);
+                if (data.Items.length > 0) {
+                    res.send(data.Items);
+                } else {
+                    res.statusCode = 404;
+                    res.send({
+                        "message": `Tickets for username ${payload.username} do not exist.`
+                    })
+                }
             }
         } else {
             res.statusCode = 401;
@@ -113,28 +82,7 @@ router.get('/employee/:username', async (req, res) => {
     }
 });
 
-router.get('/manager', async (req, res) => {
-    const token = req.headers.authorization.split(' ')[1];
-    try {
-        const payload = await verifyTokenAndReturnPayload(token);
-        if (payload.role === 'manager') {
-            res.send({
-                "message": `Welcome, manager ${payload.username}!`
-            })
-        } else {
-            res.statusCode = 401;
-            res.send({
-                "message": `You aren't a manager. You are an ${payload.role}`
-            })
-        }
-    } catch(err) {
-        res.statusCode = 401;
-        res.send({
-            "message": "Token verification failure"
-        })
-    } 
-});
-
+//project requirement 3
 router.get('/manager/tickets', async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
     try {
