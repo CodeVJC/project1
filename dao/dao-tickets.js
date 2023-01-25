@@ -6,6 +6,7 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
+//project requirement 2
 function addTicket(username, timestamp, amount, description) {
     return docClient.put({
         TableName: 'tickets',
@@ -19,42 +20,15 @@ function addTicket(username, timestamp, amount, description) {
     }).promise();
 }
 
+//project requirement 3
 function retrieveAllTickets() {
     return docClient.scan({
         TableName: 'tickets'
     }).promise();
 }
 
-function retrieveTicketsByUsername(username) {
-    return docClient.query({
-        TableName: 'tickets',
-        KeyConditionExpression: '#i = :value',
-        ExpressionAttributeNames: {
-            '#i': 'username'
-        },
-        ExpressionAttributeValues: {
-            ':value': username
-        }
-    }).promise();
-}
-
-function retrieveTicketsByUsernameandStatus(username, status) {
-    return docClient.query({
-        TableName: 'tickets',
-        KeyConditionExpression: '#i = :value',
-        FilterExpression: '#s = :value2',
-        ExpressionAttributeNames: {
-            '#i': 'username',
-            "#s": "status",
-        },
-        ExpressionAttributeValues: {
-            ':value': username,
-            ":value2": status,
-        }
-    }).promise();
-}
-
-function retrieveTicketByStatus() {
+//project requirement 3
+function retrieveTicketsByStatus(status) {
     return docClient.query({
         TableName: 'tickets',
         IndexName: 'status-index',
@@ -63,12 +37,13 @@ function retrieveTicketByStatus() {
             '#c': 'status'
         },
         ExpressionAttributeValues: {
-            ':value': 'pending'
+            ':value': status
         }
     }).promise();
 }
 
-function retrieveTicketByTimestamp(username, timestamp) {
+//project requirement 3
+function retrieveTicketByUsernameAndTimestamp(username, timestamp) {
     return docClient.query({
         TableName: 'tickets',
         KeyConditionExpression: '#i = :value and #t = :value2',
@@ -83,6 +58,7 @@ function retrieveTicketByTimestamp(username, timestamp) {
     }).promise();
 }
 
+//project requirement 3
 function updateTicketStatusByTimestamp(username, timestamp, status) {
     return docClient.update({
         TableName: 'tickets',
@@ -100,12 +76,43 @@ function updateTicketStatusByTimestamp(username, timestamp, status) {
     }).promise();
 }
 
+//project requirement 4
+function retrieveTicketsByUsername(username) {
+    return docClient.query({
+        TableName: 'tickets',
+        KeyConditionExpression: '#i = :value',
+        ExpressionAttributeNames: {
+            '#i': 'username'
+        },
+        ExpressionAttributeValues: {
+            ':value': username
+        }
+    }).promise();
+}
+
+//project requirement 4
+function retrieveTicketsByUsernameandStatus(username, status) {
+    return docClient.query({
+        TableName: 'tickets',
+        KeyConditionExpression: '#i = :value',
+        FilterExpression: '#s = :value2',
+        ExpressionAttributeNames: {
+            '#i': 'username',
+            "#s": "status",
+        },
+        ExpressionAttributeValues: {
+            ':value': username,
+            ":value2": status,
+        }
+    }).promise();
+}
+
 module.exports = {
     addTicket,
     retrieveAllTickets,
     retrieveTicketsByUsername,
     retrieveTicketsByUsernameandStatus,
-    retrieveTicketByStatus,
-    retrieveTicketByTimestamp,
-    updateTicketStatusByTimestamp
+    retrieveTicketsByStatus,
+    retrieveTicketByUsernameAndTimestamp,
+    updateTicketStatusByTimestamp,
 }

@@ -6,7 +6,8 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
-function retrieveUserByUsername(username) {
+//project requirement 1
+function retrieveUsername(username) {
     return docClient.get({
         TableName: 'users',
         Key: {
@@ -15,6 +16,7 @@ function retrieveUserByUsername(username) {
     }).promise();
 }
 
+//project requirement 1
 function addUser(username, password) {
     return docClient.put({
         TableName: 'users',
@@ -27,6 +29,6 @@ function addUser(username, password) {
 }
 
 module.exports = {
-    retrieveUserByUsername,
+    retrieveUsername,
     addUser
 };

@@ -1,9 +1,9 @@
 const express = require('express');
 const { createJWT } = require('../utility/jwt-util');
 const router = express.Router();
-const { retrieveUserByUsername, addUser } = require('../dao/dao-login');
+const { retrieveUsername, addUser } = require('../dao/dao-login');
 
-router.get('/', (req, res) => {
+router.get('/', (res) => {
     res.send("Welcome to the home page.");
 })
 
@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
 router.post('/signup', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-    const data = await retrieveUserByUsername(username);
+    const data = await retrieveUsername(username);
     if (data.Item) { 
         res.statusCode = 400;
         res.send({
@@ -27,10 +27,11 @@ router.post('/signup', async (req, res) => {
 
 });
 
+//project requirement 1
 router.post('/login', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-    const data = await retrieveUserByUsername(username);
+    const data = await retrieveUsername(username);
     const userItem = data.Item;
     if (userItem) {
         if (userItem.password === password) {

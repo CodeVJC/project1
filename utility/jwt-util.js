@@ -6,7 +6,7 @@ function createJWT(username, role) {
         username,
         role
     }, 'thisisasecret', { 
-        expiresIn: '7d'
+        expiresIn: '10d'
     })
 }
 
