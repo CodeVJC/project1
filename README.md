@@ -122,14 +122,215 @@ Body:
 #### Error - other
 Status: 500 internal server error
 
-### POST /tickets
-### POST /tickets
-### POST /tickets
-### POST /tickets
-### POST /tickets
+### GET /tickets or /tickets?status=
+#### Request - review reimbursement tickets
+Header:  
+Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6ImVtcGxveWVlIiwiaWF0IjoxNjc0NTYxOTcyLCJleHAiOjE2NzUxNjY3NzJ9.HCmJ3hx6uFtXnC-mtCpWQDFZOQxxhoAEmIVP68DrwPw"
+
+#### Success - token verified + role=employee + /tickets?status=pending, approved or denied and there is at least one
+Status: 200 OK\
+Body:
+```
+[
+    {
+        "amount": 20,
+        "username": "user1",
+        "description": "bought stapler",
+        "status": "pending",
+        "timestamp": 1674704150
+    }
+]
+```
+#### Error - token verified + role=employee but query for status other than pending, approved, or denied
+Status: 401 Unauthorized
+```
+{
+    "message": "Rejected is not a valid ticket status."
+}
+```
+#### Error - token verified + role=employee + /tickets?status=pending, approved or denied but has none
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "You have no ticket in the pending status."
+}
+```
+#### Success - token verified + role=employee + no query added, just searching for all their tickets
+Status: 200 OK\
+Body:
+```
+[
+    {
+        "amount": 20,
+        "username": "user1",
+        "description": "bought stapler",
+        "status": "pending",
+        "timestamp": 1674647326
+    },
+    {
+        "amount": 10,
+        "username": "user1",
+        "description": "bought donuts",
+        "status": "approved",
+        "timestamp": 1674649840
+    }
+]
+```
+#### Error - token verified + role=employee + no query added, but they have no tickets
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "Tickets for your username user1 do not exist."
+}
+```
+#### Success - token verified + role=manager + /tickets?status=pending, approved, or denied and there is at least one
+Status: 200 OK\
+Body:
+```
+[
+    {
+        "amount": 20,
+        "username": "user1",
+        "description": "bought stapler",
+        "status": "pending",
+        "timestamp": 1674647326
+    },
+    {
+        "amount": 50,
+        "username": "user2",
+        "description": "bought monitor",
+        "status": "pending",
+        "timestamp": 1674659340
+    }
+]
+```
+#### Error - token verified + role=manager but query for status other than pending, approved, or denied
+Status: 401 Unauthorized
+```
+{
+    "message": "Rejected is not a valid ticket status."
+}
+```
+#### Error - token verified + role=manager + /tickets?status=pending, approved, or denied but there are none
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "There are no tickets with pending status."
+}
+```
+#### Success - token verified + role=manager + no query added, just searching for all tickets
+Status: 200 OK\
+Body:
+```
+[
+    {
+        "amount": 20,
+        "username": "user1",
+        "description": "bought stapler",
+        "status": "pending",
+        "timestamp": 1674647326
+    },
+    {
+        "amount": 250,
+        "username": "user3",
+        "description": "bought chair",
+        "status": "denied",
+        "timestamp": 1674678493
+    }
+]
+```
+#### Error - token verified + role=manager + no query added, but there are no tickets
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "There are no tickets."
+}
+```
+#### Error - invalid JWT (JsonWebTokenError)
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "Invalid JWT"
+}
+```
+#### Error - no JWT (TypeError)
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "No Authorization header provided"
+}
+```
+#### Error - other
+Status: 500 internal server error
+
+### PATCH /tickets/:username/:timestamp/status
+#### Success - token verified + role=manager + they select a pending ticket and choose approved or denied
+Status: 200 OK\
+Body:
+```
+{
+    "message": "Successfully updated ticket to approved."
+}
+```
+#### Error - token verified + role=manager but they select a ticket that has already been approved or denied
+Status: 401 Unauthorized\
+Body:
+```
+{
+    "message": "You've already dispositioned this ticket with denied status."
+}
+```
+#### Error - token verified + role=manager and the selected ticket is still pending, but their new status isn't approved or denied
+Status: 401 Unauthorized\
+Body:
+```
+{
+    "message": "You must either choose "approved" or "denied," rejected is not an option."
+}
+```
+#### Success - token verified + role=manager, but the searched for username or timestamp is wrong
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "Ticket does not exist with both user <USERNAME> and timestamp <TIMESTAMP>."
+}
+```
+#### Error - token verified + role=manager + no query added, but there are no tickets
+Status: 404 Not Found\
+Body:
+```
+{
+    "message": "There are no tickets."
+}
+```
+#### Error - invalid JWT (JsonWebTokenError)
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "Invalid JWT"
+}
+```
+#### Error - no JWT (TypeError)
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "No Authorization header provided"
+}
+```
+#### Error - other
+Status: 500 internal server error
 
 ## dao-login.js handles "users" table interaction in database
-* retrieveUserByUsername
+* retrieveUsername
     * GET partition key "username"
 
 * addUser
@@ -138,6 +339,24 @@ Status: 500 internal server error
 ## dao-tickets.js handles "tickets" table interaction in database
 *  addTicket
     * PUT new "username", timestamp, amount, "description" in, hardcode "status"="pending"
+
+*  retrieveAllTickets
+    * SCAN "tickets" table for all tickets
+
+*  retrieveTicketsByStatus
+    * QUERY "status-index" for all tickets with that status
+
+*  retrieveTicketByUsernameAndTimestamp
+    * QUERY for ticket with unique combo of partition key "username" and sort key "timestamp"
+
+*  updateTicketStatusByTimestamp
+    * UPDATE "status" of ticket with unique "username" + "timestamp" key combination
+
+*  retrieveTicketsByUsername
+    * QUERY for all tickets with specific username by the "username" partition key
+
+*  retrieveTicketsByUsernameandStatus
+    * QUERY for all tickets with specific username by the "username" partition key, filtered by status
 
 ## notes
 * JWT used for authentication

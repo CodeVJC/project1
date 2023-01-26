@@ -3,7 +3,7 @@ const { createJWT } = require('../utility/jwt-util');
 const router = express.Router();
 const { retrieveUsername, addUser } = require('../dao/dao-login');
 
-router.get('/', (res) => {
+router.get('/', (req, res) => {
     res.send("Welcome to the home page.");
 })
 

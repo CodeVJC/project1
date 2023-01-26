@@ -35,7 +35,7 @@ router.post('/tickets', async (req, res) => {
                 "message": "No Authorization header provided"
             });
         } else {
-            res.statusCode = 500; // 500 internal server error
+            res.statusCode = 500;
         }
     }
 });
@@ -48,17 +48,17 @@ router.get('/tickets', async (req, res) => {
         if (payload.role === 'employee') {
             if (req.query.status) {
                 let data = await retrieveTicketsByUsernameandStatus(payload.username, req.query.status);
-                if (req.query.status !== 'pending'){
+                if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){
                     res.statusCode = 401;
                     res.send({
-                        "message": `You don't have credentials to see tickets with ${req.query.status} status.`
+                        "message": `${req.query.status} is not a valid ticket status.`
                     })
                 } else if (data.Items.length > 0) {
                     res.send(data.Items);
                 } else {
                     res.statusCode = 404;
                     res.send({
-                        "message": `There are no tickets in the ${req.query.status} status on the list.`
+                        "message": `You have no tickets in the ${req.query.status} status.`
                     })
                 }
             } else {
@@ -68,19 +68,24 @@ router.get('/tickets', async (req, res) => {
                 } else {
                     res.statusCode = 404;
                     res.send({
-                        "message": `Tickets for username ${payload.username} do not exist.`
+                        "message": `Tickets for your username ${payload.username} do not exist.`
                     })
                 }
             }
         } else {
             if (req.query.status) {
                 let data = await retrieveTicketsByStatus(req.query.status);
-                if (data.Items.length > 0) {
+                if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){
+                    res.statusCode = 401;
+                    res.send({
+                        "message": `${req.query.status} is not a valid ticket status.`
+                    })
+                } else if (data.Items.length > 0) {
                     res.send(data.Items);
                 } else {
                     res.statusCode = 404;
                     res.send({
-                        "message": `There are no tickets in the ${req.query.status} status on the list.`
+                        "message": `There are no tickets with ${req.query.status} status.`
                     })
                 }
             } else {
@@ -96,10 +101,19 @@ router.get('/tickets', async (req, res) => {
             }
         }
     } catch(err) {
-        res.statusCode = 401;
-        res.send({
-            "message": "Token verification failure"
-        })
+        if (err.name === 'JsonWebTokenError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "Invalid JWT"
+            })
+        } else if (err.name === 'TypeError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "No Authorization header provided"
+            });
+        } else {
+            res.statusCode = 500;
+        }
     }
 });
 
@@ -140,10 +154,19 @@ router.patch('/tickets/:username/:timestamp/status', async (req, res) => {
             })
         }
     } catch(err) {
-        res.statusCode = 401;
-        res.send({
-            "message": "Token verification failure"
-        })
+        if (err.name === 'JsonWebTokenError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "Invalid JWT"
+            })
+        } else if (err.name === 'TypeError') {
+            res.statusCode = 400;
+            res.send({
+                "message": "No Authorization header provided"
+            });
+        } else {
+            res.statusCode = 500;
+        }
     }
 });
 
