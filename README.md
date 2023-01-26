@@ -1,4 +1,4 @@
-# PROJECT 1 REIMBURSEMENT TiCKETS SYSTEM
+# Project 1 - Reimbursement Ticket System
 
 ## Starting app
 *   Run npm install
