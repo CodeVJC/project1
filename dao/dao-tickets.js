@@ -7,7 +7,7 @@ AWS.config.update({
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 //project requirement 2
-function addTicket(username, timestamp, amount, description) {
+function addTicket(username, timestamp, amount, description, type) {
     return docClient.put({
         TableName: 'tickets',
         Item: {
@@ -15,6 +15,7 @@ function addTicket(username, timestamp, amount, description) {
             "timestamp": timestamp,
             "amount": amount,
             "description": description,
+            "type": type,
             "status": "pending"
         }
     }).promise();
@@ -107,6 +108,23 @@ function retrieveTicketsByUsernameandStatus(username, status) {
     }).promise();
 }
 
+//project stretch goal 1
+function retrieveTicketsByUsernameandType(username, type) {
+    return docClient.query({
+        TableName: 'tickets',
+        KeyConditionExpression: '#i = :value',
+        FilterExpression: '#t = :value2',
+        ExpressionAttributeNames: {
+            '#i': 'username',
+            "#t": "type",
+        },
+        ExpressionAttributeValues: {
+            ':value': username,
+            ":value2": type,
+        }
+    }).promise();
+}
+
 module.exports = {
     addTicket,
     retrieveAllTickets,
@@ -115,4 +133,5 @@ module.exports = {
     retrieveTicketsByStatus,
     retrieveTicketByUsernameAndTimestamp,
     updateTicketStatusByTimestamp,
+    retrieveTicketsByUsernameandType
 }

@@ -2,21 +2,33 @@ const express = require('express');
 const { verifyTokenAndReturnPayload } = require('../utility/jwt-util');
 const router = express.Router();
 const { addTicket, retrieveAllTickets, retrieveTicketsByUsername, retrieveTicketsByUsernameandStatus, retrieveTicketsByStatus,
-    retrieveTicketByUsernameAndTimestamp, updateTicketStatusByTimestamp } = require('../dao/dao-tickets');
+    retrieveTicketByUsernameAndTimestamp, updateTicketStatusByTimestamp, retrieveTicketsByUsernameandType } = require('../dao/dao-tickets');
 const timestamp = require('unix-timestamp');
 timestamp.round = true;
 
-//project requirement 2
+//project requirement 2 and stretch goal 1
 router.post('/tickets', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1]; 
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
-            await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description);
-            res.statusCode = 201; 
-            res.send({
-                "message": "Successfully added ticket."
-            });
+            if ( (req.body.amount <= 0 || req.body.amount > 10000) || (req.body.description.length == 0) ) {
+                res.statusCode = 400; 
+                res.send({
+                    "message": "You need to provide both a valid amount and description."
+                });
+            } else if (req.body.type !== 'travel' && req.body.type !== 'lodging' && req.body.type !== 'food' && req.body.type !== 'other') {
+                res.statusCode = 400; 
+                res.send({
+                    "message": "You need to provide a valid type of reimbursement (travel, lodging, food or other)."
+                });
+            } else {
+                await addTicket(payload.username, timestamp.now(), req.body.amount, req.body.description, req.body.type);
+                res.statusCode = 201; 
+                res.send({
+                    "message": "Successfully added ticket."
+                });
+            }
         } else {
             res.statusCode = 401;
             res.send({
@@ -40,13 +52,28 @@ router.post('/tickets', async (req, res) => {
     }
 });
 
-//project requirements 3 and 4
+//project requirements 3 and 4 and stretch goal 1
 router.get('/tickets', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
         const payload = await verifyTokenAndReturnPayload(token);
         if (payload.role === 'employee') {
-            if (req.query.status) {
+            if (req.query.type) {
+                let data = await retrieveTicketsByUsernameandType(payload.username, req.query.type);
+                if (req.query.type !== 'travel' && req.query.type !== 'lodging' && req.query.type !== 'food' && req.query.type !== 'other') {
+                    res.statusCode = 401;
+                    res.send({
+                        "message": `${req.query.type} is not a valid ticket type.`
+                    })
+                } else if (data.Items.length > 0) {
+                    res.send(data.Items);
+                } else {
+                    res.statusCode = 404;
+                    res.send({
+                        "message": `You have no tickets with type ${req.query.type}.`
+                    })
+                }  
+            } else if (req.query.status) {
                 let data = await retrieveTicketsByUsernameandStatus(payload.username, req.query.status);
                 if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){
                     res.statusCode = 401;
@@ -60,7 +87,7 @@ router.get('/tickets', async (req, res) => {
                     res.send({
                         "message": `You have no tickets in the ${req.query.status} status.`
                     })
-                }
+                }             
             } else {
                 let data = await retrieveTicketsByUsername(payload.username);
                 if (data.Items.length > 0) {
@@ -72,7 +99,7 @@ router.get('/tickets', async (req, res) => {
                     })
                 }
             }
-        } else {
+        } else if (payload.role === 'manager') {
             if (req.query.status) {
                 let data = await retrieveTicketsByStatus(req.query.status);
                 if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){

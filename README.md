@@ -19,8 +19,8 @@ Welcome to the home page.
 Body:
 ```
 {
-    "username": "username",
-    "password": "password"
+    "username": <USERNAME>,
+    "password": <PASSWORD>
 }
 ```
 #### Success - username doesn't exist, password provided => user made
@@ -45,8 +45,8 @@ Body:
 Body:
 ```
 {
-    "username": "username",
-    "password": "password"
+    "username": <USERNAME>,
+    "password": <PASSWORD>
 }
 ```
 #### Success - username exists, password matches => token made
@@ -55,7 +55,7 @@ Body:
 ```
 {
     "message": "Successfully authenticated",
-    "token": "<token provided here>"
+    "token": <token>
 }
 ```
 #### Error - username doesn't exist
@@ -86,7 +86,7 @@ Body:
 }
 ```
 Header:  
-Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6ImVtcGxveWVlIiwiaWF0IjoxNjc0NTYxOTcyLCJleHAiOjE2NzUxNjY3NzJ9.HCmJ3hx6uFtXnC-mtCpWQDFZOQxxhoAEmIVP68DrwPw"
+Authorization: "Bearer <token>"
 
 #### Success - token verified + role=employee
 Status: 201 Created\
@@ -96,11 +96,27 @@ Body:
     "message": "Successfully added ticket."
 }
 ```
+#### Error - token valid, but reimbursement amount given is <=0 or >10,000, or description length is equal to 0
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "You need to provide both a valid amount and description."
+}
+```
+#### Error - token valid, but reimbursement type given is not travel, lodging, food or other
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "You need to provide a valid type of reimbursement (travel, lodging, food or other)."
+}
+```
 #### Error - token valid, but for a manager, not employee
 Status: 401 Unauthorized
 ```
 {
-    "message": "You aren't a regular employee. You are a manager."
+    "message": "You aren't a regular employee. You are a <manager>."
 }
 ```
 #### Error - invalid JWT (JsonWebTokenError)
@@ -125,11 +141,40 @@ Status: 500 internal server error
 ### GET /tickets or /tickets?status=
 #### Request - review reimbursement tickets
 Header:  
-Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6ImVtcGxveWVlIiwiaWF0IjoxNjc0NTYxOTcyLCJleHAiOjE2NzUxNjY3NzJ9.HCmJ3hx6uFtXnC-mtCpWQDFZOQxxhoAEmIVP68DrwPw"
-
-#### Success - token verified + role=employee + /tickets?status=pending, approved or denied and there is at least one
+Authorization: "Bearer <token>"
+#### Success - token verified + role=employee + /tickets?type=travel, lodging, food or other and there is at least one ticket 
 Status: 200 OK\
+Body example:
+```
+[
+    {
+        "status": "pending",
+        "timestamp": 1674719330,
+        "amount": 10,
+        "username": "user1",
+        "description": "arbys",
+        "type": "food"
+    }
+]
+```
+#### Error - token verified + role=employee but query for type other than travel, lodging, food or other
+Status: 401 Unauthorized
+```
+{
+    "message": "<INPUT> is not a valid ticket type."
+}
+```
+#### Error - token verified + role=employee + /tickets?type=travel, lodging, food or other, but has none
+Status: 404 Not Found\
 Body:
+```
+{
+    "message": "You have no ticket in the <INPUT> type."
+}
+```
+#### Success - token verified + role=employee + /tickets?status=pending, approved or denied and there is at least one ticket
+Status: 200 OK\
+Body example:
 ```
 [
     {
@@ -145,20 +190,20 @@ Body:
 Status: 401 Unauthorized
 ```
 {
-    "message": "Rejected is not a valid ticket status."
+    "message": "<INPUT> is not a valid ticket status."
 }
 ```
-#### Error - token verified + role=employee + /tickets?status=pending, approved or denied but has none
+#### Error - token verified + role=employee + /tickets?status=pending, approved or denied, but has none
 Status: 404 Not Found\
 Body:
 ```
 {
-    "message": "You have no ticket in the pending status."
+    "message": "You have no ticket in the <INPUT> status."
 }
 ```
 #### Success - token verified + role=employee + no query added, just searching for all their tickets
 Status: 200 OK\
-Body:
+Body example:
 ```
 [
     {
@@ -182,12 +227,12 @@ Status: 404 Not Found\
 Body:
 ```
 {
-    "message": "Tickets for your username user1 do not exist."
+    "message": "Tickets for your username <username> do not exist."
 }
 ```
 #### Success - token verified + role=manager + /tickets?status=pending, approved, or denied and there is at least one
 Status: 200 OK\
-Body:
+Body example:
 ```
 [
     {
@@ -210,7 +255,7 @@ Body:
 Status: 401 Unauthorized
 ```
 {
-    "message": "Rejected is not a valid ticket status."
+    "message": "<INPUT> is not a valid ticket status."
 }
 ```
 #### Error - token verified + role=manager + /tickets?status=pending, approved, or denied but there are none
@@ -218,12 +263,12 @@ Status: 404 Not Found\
 Body:
 ```
 {
-    "message": "There are no tickets with pending status."
+    "message": "There are no tickets with <INPUT> status."
 }
 ```
 #### Success - token verified + role=manager + no query added, just searching for all tickets
 Status: 200 OK\
-Body:
+Body example:
 ```
 [
     {
@@ -275,7 +320,7 @@ Status: 200 OK\
 Body:
 ```
 {
-    "message": "Successfully updated ticket to approved."
+    "message": "Successfully updated ticket to <INPUT>."
 }
 ```
 #### Error - token verified + role=manager but they select a ticket that has already been approved or denied
@@ -283,7 +328,7 @@ Status: 401 Unauthorized\
 Body:
 ```
 {
-    "message": "You've already dispositioned this ticket with denied status."
+    "message": "You've already dispositioned this ticket with <INPUT> status."
 }
 ```
 #### Error - token verified + role=manager and the selected ticket is still pending, but their new status isn't approved or denied
@@ -291,7 +336,7 @@ Status: 401 Unauthorized\
 Body:
 ```
 {
-    "message": "You must either choose "approved" or "denied," rejected is not an option."
+    "message": "You must either choose "approved" or "denied," <INPUT> is not an option."
 }
 ```
 #### Success - token verified + role=manager, but the searched for username or timestamp is wrong
