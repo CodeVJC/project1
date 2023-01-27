@@ -24,7 +24,6 @@ router.post('/signup', async (req, res) => {
             "message": "Successfully registered. Please go to login page."
         });
     } 
-
 });
 
 //project requirement 1

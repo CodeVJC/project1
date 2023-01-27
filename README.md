@@ -96,12 +96,20 @@ Body:
     "message": "Successfully added ticket."
 }
 ```
-#### Error - token valid, but reimbursement amount given is <=0 or >10,000, or description length is equal to 0
+#### Error - token valid, but reimbursement amount given is <=0 or >10,000
 Status: 400 Bad Request\
 Body:
 ```
 {
-    "message": "You need to provide both a valid amount and description."
+    "message": "You need to provide a valid amount."
+}
+```
+#### Error - token valid, but reimbursement description length is equal to 0
+Status: 400 Bad Request\
+Body:
+```
+{
+    "message": "You need to provide a description."
 }
 ```
 #### Error - token valid, but reimbursement type given is not travel, lodging, food or other
@@ -127,16 +135,14 @@ Body:
     "message": "Invalid JWT"
 }
 ```
-#### Error - no JWT (TypeError)
-Status: 400 Bad Request\
+#### Error - other
+Status: 500 internal server error\
 Body:
 ```
 {
-    "message": "No Authorization header provided"
+    "message": <error description>
 }
 ```
-#### Error - other
-Status: 500 internal server error
 
 ### GET /tickets or /tickets?status=
 #### Request - review reimbursement tickets
@@ -303,16 +309,14 @@ Body:
     "message": "Invalid JWT"
 }
 ```
-#### Error - no JWT (TypeError)
-Status: 400 Bad Request\
+#### Error - other
+Status: 500 internal server error\
 Body:
 ```
 {
-    "message": "No Authorization header provided"
+    "message": <error description>
 }
 ```
-#### Error - other
-Status: 500 internal server error
 
 ### PATCH /tickets/:username/:timestamp/status
 #### Success - token verified + role=manager + they select a pending ticket and choose approved or denied
@@ -363,16 +367,14 @@ Body:
     "message": "Invalid JWT"
 }
 ```
-#### Error - no JWT (TypeError)
-Status: 400 Bad Request\
+#### Error - other
+Status: 500 internal server error\
 Body:
 ```
 {
-    "message": "No Authorization header provided"
+    "message": <error description>
 }
 ```
-#### Error - other
-Status: 500 internal server error
 
 ## dao-login.js handles "users" table interaction in database
 * retrieveUsername
