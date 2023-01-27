@@ -116,31 +116,38 @@ router.get('/tickets', async (req, res) => {
                 });
             }
         } else if (payload.role === 'manager') {
-            if (req.query.status) {
-                let data = await retrieveTicketsByStatus(req.query.status);
-                if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){
-                    res.statusCode = 401;
-                    res.send({
-                        "message": `${req.query.status} is not a valid ticket status.`
-                    })
-                } else if (data.Items.length > 0) {
-                    res.send(data.Items);
+            try {
+                if (req.query.status) {
+                    let data = await retrieveTicketsByStatus(req.query.status);
+                    if (req.query.status !== 'pending' && req.query.status !== 'approved' && req.query.status !== 'denied'){
+                        res.statusCode = 401;
+                        res.send({
+                            "message": `${req.query.status} is not a valid ticket status.`
+                        })
+                    } else if (data.Items.length > 0) {
+                        res.send(data.Items);
+                    } else {
+                        res.statusCode = 404;
+                        res.send({
+                            "message": `There are no tickets with ${req.query.status} status.`
+                        })
+                    }
                 } else {
-                    res.statusCode = 404;
-                    res.send({
-                        "message": `There are no tickets with ${req.query.status} status.`
-                    })
+                    let data = await retrieveAllTickets();
+                    if (data.Items.length > 0) {
+                        res.send(data.Items);
+                    } else {
+                        res.statusCode = 404;
+                        res.send({
+                            "message": `There are no tickets.`
+                        })
+                    }
                 }
-            } else {
-                let data = await retrieveAllTickets();
-                if (data.Items.length > 0) {
-                    res.send(data.Items);
-                } else {
-                    res.statusCode = 404;
-                    res.send({
-                        "message": `There are no tickets.`
-                    })
-                }
+            } catch (err) {
+                res.statusCode = 500;
+                res.send({
+                    "message": err
+                });
             }
         }
     } catch(err) {
@@ -175,7 +182,7 @@ router.patch('/tickets/:username/:timestamp/status', async (req, res) => {
                     } else if (req.body.status.toLowerCase() !== "approved" && req.body.status.toLowerCase() !== "denied") {
                         res.statusCode = 401;
                         res.send({
-                            "message": `You must either choose "approved" or "denied," ${req.body.status} is not an option.`
+                            "message": `You must either choose approved or denied, ${req.body.status} is not an option.`
                         })                        
                     } else {
                         await updateTicketStatusByTimestamp(req.params.username, Number(req.params.timestamp), req.body.status.toLowerCase());
@@ -183,16 +190,11 @@ router.patch('/tickets/:username/:timestamp/status', async (req, res) => {
                         "message": `Successfully updated status of ticket to ${req.body.status}.`
                         });
                     }
-                } else {
-                    res.statusCode = 404;
-                    res.send({
-                        "message": `Ticket does not exist with user ${req.params.username} or timestamp ${Number(req.params.timestamp)}.`
-                    });
-                }
+                }                    
             } catch (err) {
-                res.statusCode = 500;
+                res.statusCode = 404;
                 res.send({
-                    "message": err
+                    "message": `Ticket does not exist with user ${req.params.username} or timestamp ${Number(req.params.timestamp)}.`
                 });
             }  
         } else {

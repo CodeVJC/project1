@@ -32,7 +32,7 @@ function retrieveAllTickets() {
 function retrieveTicketsByStatus(status) {
     return docClient.query({
         TableName: 'tickets',
-        IndexName: 'status-index',
+        IndexName: 'status-timestamp-index',
         KeyConditionExpression: '#c = :value',
         ExpressionAttributeNames: {
             '#c': 'status'
