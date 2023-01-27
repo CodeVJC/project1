@@ -135,6 +135,14 @@ Body:
     "message": "Invalid JWT"
 }
 ```
+#### Error - no JWT
+Status: 500 internal server error\
+Body:
+```
+{
+    "message": "no JWT"
+}
+```
 #### Error - other
 Status: 500 internal server error\
 Body:
@@ -309,6 +317,14 @@ Body:
     "message": "Invalid JWT"
 }
 ```
+#### Error - no JWT
+Status: 500 internal server error\
+Body:
+```
+{
+    "message": "no JWT"
+}
+```
 #### Error - other
 Status: 500 internal server error\
 Body:
@@ -343,7 +359,7 @@ Body:
     "message": "You must either choose "approved" or "denied," <INPUT> is not an option."
 }
 ```
-#### Success - token verified + role=manager, but the searched for username or timestamp is wrong
+#### Error - token verified + role=manager, but the searched for username or timestamp is wrong
 Status: 404 Not Found\
 Body:
 ```
@@ -351,12 +367,12 @@ Body:
     "message": "Ticket does not exist with both user <USERNAME> and timestamp <TIMESTAMP>."
 }
 ```
-#### Error - token verified + role=manager + no query added, but there are no tickets
+#### Error - token verified but it's an employee, not a manager
 Status: 404 Not Found\
 Body:
 ```
 {
-    "message": "There are no tickets."
+    "message": `You are an <employee> and don't have the authority to update ticket status."
 }
 ```
 #### Error - invalid JWT (JsonWebTokenError)
@@ -367,12 +383,12 @@ Body:
     "message": "Invalid JWT"
 }
 ```
-#### Error - other
+#### Error - no JWT
 Status: 500 internal server error\
 Body:
 ```
 {
-    "message": <error description>
+    "message": "no JWT"
 }
 ```
 
@@ -391,7 +407,7 @@ Body:
     * SCAN "tickets" table for all tickets
 
 *  retrieveTicketsByStatus
-    * QUERY "status-index" for all tickets with that status
+    * QUERY "status-timestamp-index" for all tickets with that status sorted by timestamp so it's first-in-first-out like a queue
 
 *  retrieveTicketByUsernameAndTimestamp
     * QUERY for ticket with unique combo of partition key "username" and sort key "timestamp"
